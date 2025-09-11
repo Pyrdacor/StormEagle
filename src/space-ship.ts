@@ -1,10 +1,11 @@
 import p5, { Image } from "p5";
-import { Projectiles, ProjectileSource, ProjectileType } from "./projectiles";
+import { defaultFireDelay, Projectiles, projectileSettings, ProjectileSource, ProjectileType } from "./projectiles";
 import { ISprite, Sprite } from "./render/sprite";
 
 export class SpaceShip implements ISprite {
     private readonly _sprite: Sprite;
     private _projectileType: ProjectileType = ProjectileType.Plasma;
+    private _lastShootTime = 0;
 
     constructor(image: Image, private readonly _projectiles: Projectiles) {
         this._sprite = new Sprite(image, 256);
@@ -23,9 +24,17 @@ export class SpaceShip implements ISprite {
     }
 
     public shoot(): void {
+        const fireDelay = projectileSettings[this._projectileType].fireDelay ?? defaultFireDelay;
+        const now = new Date().getTime();
+
+        if (this._lastShootTime + fireDelay > now) {
+            return;
+        }
+
+        this._lastShootTime = now;
         this._projectiles.spawn(this._projectileType, {
-            x: this.x + this.width,
-            y: this.y + this.height / 2
+            x: this.x + this.width, // TODO: maybe shoot from cannons and not the nose
+            y: this.y + this.height / 2 + 10 // TODO: adjust
         }, ProjectileSource.Player);
     }
 

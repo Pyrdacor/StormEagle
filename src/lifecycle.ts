@@ -49,8 +49,8 @@ export async function setup(p: p5): Promise<void> {
     game.setup(p);
 }
 
-export function keyPressed(p: p5): void {
-    game.keyPressed(p, p.keyCode);
+export function keyPressed(p: p5, event: KeyboardEvent): void {
+    game.keyPressed(p, event);
 }
 
 export function keyReleased(p: p5): void {

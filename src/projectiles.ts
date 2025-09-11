@@ -7,6 +7,21 @@ export enum ProjectileType {
     Plasma
 }
 
+export interface ProjectileSettings {
+    /**
+     * This just controls if you can hold space to
+     * shoot automatically. There is still a delay
+     * when projectiles are spawned. Some weak early
+     * projectile types need manual single firing.
+     */
+    allowPermaFire: boolean;
+    width: number;
+    speed: number;
+    damage: number;
+    fireDelay?: number;
+    progression: ProjectileProgression;
+}
+
 export enum ProjectileSource {
     Player,
     Enemy
@@ -15,16 +30,17 @@ export enum ProjectileSource {
 type ProjectileProgression = (lastPositions: [Position, Position], speed: number) => Position;
 type ProjectileCollisionTest = (projectile: Projectile) => void;
 
-const projectileSizes: number[] = [
-    72
-];
+export const defaultFireDelay = 250; // ms
+const defaultProgression: ProjectileProgression = ([a, b], speed) => ({ x: b.x + speed, y: b.y });
 
-const projectileSpeeds: number[] = [
-    16
-];
-
-const projectileProgressions: ProjectileProgression[] = [
-    ([a, b], speed) => ({ x: b.x + speed, y: b.y })
+export const projectileSettings: ProjectileSettings[] = [
+    {
+        allowPermaFire: false,
+        width: 72,
+        speed: 16,
+        damage: 5,
+        progression: defaultProgression,
+    }
 ];
 
 export class Projectile extends Sprite {
@@ -54,7 +70,7 @@ export class Projectile extends Sprite {
     }
 
     public move(progression: ProjectileProgression): void {
-        const newPosition = progression([this._lastPosition, { x: this.x, y: this.y }], projectileSpeeds[this._type]);
+        const newPosition = progression([this._lastPosition, { x: this.x, y: this.y }], projectileSettings[this._type].speed);
         this.moveTo(newPosition.x, newPosition.y);
     }
 
@@ -86,7 +102,7 @@ export class Projectiles {
      */
     public spawn(type: ProjectileType, position: Position, source: ProjectileSource): Projectile {
         const image = this._images.get(type);
-        const width = projectileSizes[type];
+        const width = projectileSettings[type].width;
         const height = image.height * width / image.width;
 
         position.y -= height / 2;
@@ -102,7 +118,7 @@ export class Projectiles {
         const projectilesToRemove = new Set<number>();
 
         this._projectiles.forEach((projectile, index) => {
-            projectile.move(projectileProgressions[projectile.type]);
+            projectile.move(projectileSettings[projectile.type].progression);
 
             testCollision(projectile);
 

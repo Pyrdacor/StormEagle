@@ -1,12 +1,11 @@
 import p5, { Image } from "p5";
-import { Sprite } from "./render/sprite";
 import { StarField } from "./render/starField";
 import { ImageLoader } from "./misc";
 import { AsteroidField } from "./render/asteroidField";
 import { Direction } from "./render/direction";
 import { P5 } from './constants';
 import { SpaceShip } from "./space-ship";
-import { Projectile, Projectiles, ProjectileType } from "./projectiles";
+import { projectileSettings, Projectile, Projectiles, ProjectileType } from "./projectiles";
 
 export class Game {
     private _speed: number = 5;
@@ -43,10 +42,11 @@ export class Game {
         }
     }
 
-    public keyPressed(p: p5, keyCode: number): void {
-        // Space key
-        if (keyCode === 32) {
-            this._spaceShip.shoot();
+    public keyPressed(p: p5, event: KeyboardEvent): void {
+        if (event.code === 'Space') {
+            if (projectileSettings[this._spaceShip.projectileType].allowPermaFire || !event.repeat) {
+                this._spaceShip.shoot();
+            }
         }
     }
 
@@ -61,6 +61,9 @@ export class Game {
                 this._spaceShip.moveBy(-this._speed, 0);
             } else if (this.isDirectionKeyDown(p, Direction.Right) && !this.isDirectionKeyDown(p, Direction.Left) && this._spaceShip.x + this._spaceShip.width < p.width) {
                 this._spaceShip.moveBy(this._speed, 0);
+            }
+            if (p.keyIsDown('Space') && projectileSettings[this._spaceShip.projectileType].allowPermaFire) {
+                this._spaceShip.shoot();
             }
         }
 

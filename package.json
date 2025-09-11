@@ -1,0 +1,38 @@
+{
+  "name": "StormEagle",
+  "version": "1.0.0",
+  "description": "Storm Eagle",
+  "targets": {
+    "default": {
+      "distDir": "./dist",
+      "source": "index.html"
+    },
+    "assets": {
+      "distDir": "./dist/assets",
+      "source": "assets/*"
+    }
+  },
+  "scripts": {
+    "gen": "node create-p5-constants.cjs",
+    "start": "npm run gen && vite --port 1234",
+    "build": "vite build",
+    "preview": "vite preview"
+  },
+  "dependencies": {
+    "@types/p5": "^1.7.6",
+    "p5": "^2.0.5",
+    "parcel": "^2.15.4",
+    "rxjs": "^7.8.2"
+  },
+  "devDependencies": {
+    "@parcel/transformer-sass": "^2.15.4",
+    "parcel-bundler": "^1.12.5",
+    "sass": "^1.92.1",
+    "typescript": "^5.5.4",
+    "vite": "^6.3.6"
+  },
+  "keywords": [
+    "p5js",
+    "typescript"
+  ]
+}

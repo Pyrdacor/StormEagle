@@ -1,4 +1,5 @@
 import p5, { Image } from "p5";
+import { intersectsWithRect, Rect } from "./rect";
 
 export function imageRotated(p: p5, img: Image, x: number, y: number, rotation: number, width?: number, height?: number) {
     const w = width ?? img.width;
@@ -10,4 +11,15 @@ export function imageRotated(p: p5, img: Image, x: number, y: number, rotation: 
     p.image(img, 0, 0, w, h);
     p.pop();
     p.imageMode('corner');
+}
+
+export function isOnScreen(p: p5, rect: Rect): boolean {
+    const screenArea: Rect = {
+        x: 0,
+        y: 0,
+        width: p.width,
+        height: p.height
+    };
+
+    return intersectsWithRect(screenArea, rect);
 }

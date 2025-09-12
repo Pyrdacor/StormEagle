@@ -7,6 +7,7 @@ import { isOnScreen } from "./render/utils";
 import { DirectionX, DirectionY } from "./render/direction";
 import { Enemy } from "./enemies";
 import { SpaceShip } from "./space-ship";
+import { Animation } from "./render/animation";
 
 export enum ProjectileType {
     Plasma
@@ -83,60 +84,45 @@ export class Projectile extends MovingSprite {
     }
 }
 
-export class Projectiles {
-    private _projectiles: Projectile[] = [];
+export class Explosions {
+    private _explosions: Animation[] = [];
 
-    constructor(private readonly _images: Map<ProjectileType, Image>) {
+    constructor(private readonly _image: Image) {
 
     }
 
-    /**
-     * Spawns a new projectile of the given type at the given position.
-     * 
-     * The x-coordinate is the left side of the projectile.
-     * The y-coordinate is the vertical center of the projectile.
-     */
-    public spawn(sourceObject: SpaceShip | Enemy, type: ProjectileType, position: Position,
-        source: ProjectileSource, directionX?: DirectionX, directionY?: DirectionY, scale = 1.0
-    ): Projectile {
-        const image = this._images.get(type);
-        const width = projectileSettings[type].width;
-        const height = image.height * width / image.width;
+    public spawn(position: Position, scale = 1.0): Animation {
+        const width = this._image.width * scale;
+        const height = this._image.height * scale;
 
+        position.x -= width / 2;
         position.y -= height / 2;
 
-        directionX ??= (source === ProjectileSource.Player ? DirectionX.Right : DirectionX.Left);
-        directionY ??= DirectionY.Down;
+        const explosion = new Animation(this._image, 212, 212, 60, width, height, 7);
+        explosion.moveTo(position.x, position.y);
 
-        const projectile = new Projectile(sourceObject, type, source, directionX, directionY,
-            image, position, { width: width * scale, height: height * scale });
+        this._explosions.push(explosion);
 
-        this._projectiles.push(projectile);
-
-        return projectile;
+        return explosion;
     }
 
-    public update(p: p5, testCollision: ProjectileCollisionTest): void {
-        const projectilesToRemove = new Set<number>();
+    public update(p: p5): void {
+        const explosionsToRemove = new Set<number>();
 
-        this._projectiles.forEach((projectile, index) => {
-            const settings = projectileSettings[projectile.type];
-            const movement = settings.movement[projectile.source];
-            projectile.move(movement, settings.speed);
+        this._explosions.forEach((explosion, index) => {
+            explosion.update(p);
 
-            testCollision(projectile);
-
-            if (!isOnScreen(p, projectile.area)) {
-                projectilesToRemove.add(index);
+            if (explosion.finished) {
+                explosionsToRemove.add(index);
             }
         });
 
-        if (projectilesToRemove.size > 0) {
-            this._projectiles = this._projectiles.filter((_, index) => !projectilesToRemove.has(index));
+        if (explosionsToRemove.size > 0) {
+            this._explosions = this._explosions.filter((_, index) => !explosionsToRemove.has(index));
         }
     }
 
     public draw(p: p5): void {
-        this._projectiles.forEach(projectile => projectile.draw(p));
+        this._explosions.forEach(explosion => explosion.draw(p));
     }
 }

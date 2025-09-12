@@ -5,11 +5,18 @@ import { AsteroidField } from "./render/asteroidField";
 import { Direction } from "./render/direction";
 import { P5 } from './constants';
 import { SpaceShip } from "./space-ship";
-import { projectileSettings, Projectile, Projectiles, ProjectileType } from "./projectiles";
+import { projectileSettings, Projectile, Projectiles, ProjectileType, ProjectileSource } from "./projectiles";
+import { Enemies, Enemy, EnemyType } from "./enemies";
+import { Player } from "./player";
+import { intersectsWithRect } from "./render/rect";
+import { Explosions } from "./explosions";
 
 export class Game {
+    private readonly _player = new Player();
     private _speed: number = 5;
     private _projectiles: Projectiles | undefined = undefined;
+    private _explosions: Explosions | undefined = undefined;
+    private _enemies: Enemies | undefined = undefined;
     private _spaceShip: SpaceShip | undefined = undefined;
     private _asteroidImage: Image | undefined = undefined;
     private _starFields: StarField[] = [];
@@ -19,6 +26,10 @@ export class Game {
         this._projectiles = new Projectiles(new Map([
             [ProjectileType.Plasma, await imageLoader('./assets/plasma_projectile.png')]
         ]));
+        this._explosions = new Explosions(await imageLoader('./assets/explosion.png'));
+        this._enemies = new Enemies(new Map([
+            [EnemyType.Spaceship, await imageLoader('./assets/enemy_spaceship.png')]
+        ]), this._projectiles, this._explosions);
         this._spaceShip = new SpaceShip(await imageLoader('./assets/spaceship.png'), this._projectiles);
         this._asteroidImage = await imageLoader('./assets/asteroid.png');
     }
@@ -47,6 +58,12 @@ export class Game {
             if (projectileSettings[this._spaceShip.projectileType].allowPermaFire || !event.repeat) {
                 this._spaceShip.shoot();
             }
+        } else if (event.code === 'KeyE' && this._enemies) { // TODO: REMOVE LATER
+            const enemySize = this._enemies.getEnemySize(EnemyType.Spaceship);
+            this._enemies.spawn(EnemyType.Spaceship, {
+                x: p.width,
+                y: Math.random() * p.height - enemySize.height
+            });
         }
     }
 
@@ -70,14 +87,38 @@ export class Game {
         this._starFields.forEach((starField, index) => starField.update(0.3 * (index + 1)));
         this._asteroidFields.forEach((asteroidField, index) => asteroidField.update(4 * (index + 1)));
 
-        this._projectiles.update(p, (projectile) => this.testCollision(projectile));
+        this._enemies.update(p, (enemy) => this.testEnemyCollision(enemy));
+        this._projectiles.update(p, (projectile) => this.testProjectileCollision(projectile));
+        this._explosions.update(p);
     }
 
-    private testCollision(projectile: Projectile): void {
-        const lastPosition = projectile.lastPosition;
-        const position = { x: projectile.x, y: projectile.y };
+    private testProjectileCollision(projectile: Projectile): void {
+        if (projectile.source === ProjectileSource.Enemy) {
+            if (!this._spaceShip) return;
+            if (this._player.invincible) return;
 
-        // TODO
+            if (this._spaceShip.collisionAreas.some(area => intersectsWithRect(projectile.area, area))) {
+                this._player.damage((projectile.sourceObject as Enemy).getProjectileDamage(projectile.type));
+                // TODO: render spaceship as blinking and more transparent to show invincible state (also stop it afterwards)
+                console.log(`Energy: ${this._player.energy} | Shield: ${this._player.shield}`);
+            }
+        } else {
+            if (!this._enemies) return;
+
+            const playerDamage = projectileSettings[projectile.type].damage * this._player.damageMultiplicator;
+            this._enemies.getEnemies(enemy => enemy.testCollision([projectile.area])).forEach(enemy => enemy.damage(playerDamage));
+        }
+    }
+
+    private testEnemyCollision(enemy: Enemy): void {
+        if (!this._spaceShip) return;
+        if (this._player.invincible) return;
+
+        if (enemy.testCollision(this._spaceShip.collisionAreas)) {
+            this._player.damage(enemy.touchDamage);
+            // TODO: render spaceship as blinking and more transparent to show invincible state (also stop it afterwards)
+            console.log(`Energy: ${this._player.energy} | Shield: ${this._player.shield}`);
+        }
     }
 
     public render(p: p5): void {
@@ -85,6 +126,14 @@ export class Game {
 
         this._starFields.forEach(starField => starField.draw(p));
         this._asteroidFields.forEach(asteroidField => asteroidField.draw(p));
+
+        if (this._enemies) {
+            this._enemies.draw(p);
+        }
+
+        if (this._explosions) {
+            this._explosions.draw(p);
+        }
 
         if (this._spaceShip) {
             this._spaceShip.draw(p);

@@ -3,6 +3,8 @@ export interface Position {
     y: number;
 }
 
+export const invalidCoordinate = Number.NaN;
+
 export function ZeroPosition(): Position {
     return { x: 0, y: 0 };
 }

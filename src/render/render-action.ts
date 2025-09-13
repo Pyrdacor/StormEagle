@@ -9,19 +9,34 @@ export interface RenderAction {
 
 export class RenderActionState<T extends RenderAction> {
     private _actionIndex?: number;
+    private _removeTime?: number;
 
-    constructor(private readonly _renderNode: RenderNode, private readonly _actionFactory: () => T, initiallyEnabled = false) {
+    constructor(
+        private readonly _renderNode: RenderNode,
+        private readonly _actionFactory: () => T,
+        initiallyEnabled = false
+    ) {
         if (initiallyEnabled) {
             this.enableAction(true);
         }
     }
 
-    public enableAction(enable: boolean) {
+    public enableAction(enable: boolean, autoRemoveAfter?: number) {
         if (enable && this._actionIndex == undefined) {
             this._actionIndex = this._renderNode.addRenderAction(this._actionFactory());
+            if (autoRemoveAfter != undefined) {
+                this._removeTime = Date.now() + autoRemoveAfter;
+            }
         } else if (!enable && this._actionIndex != undefined) {
             this._renderNode.removeRenderAction(this._actionIndex);
             this._actionIndex = undefined;
+        }
+    }
+
+    public update(): void {
+        if (this._removeTime != undefined && Date.now() >= this._removeTime) {
+            this.enableAction(false);
+            this._removeTime = undefined;
         }
     }
 }

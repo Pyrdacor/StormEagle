@@ -1,4 +1,4 @@
-const invincibleTime = 2000;
+export const invincibleTime = 2000;
 
 export class Player {
     private _energy = 100;

@@ -102,8 +102,7 @@ export class Game {
 
             if (this._spaceShip.collisionAreas.some(area => intersectsWithRect(projectile.area, area))) {
                 this._player.damage((projectile.sourceObject as Enemy).getProjectileDamage(projectile.type));
-                // TODO: render spaceship as blinking and more transparent to show invincible state (also stop it afterwards)
-                console.log(`Energy: ${this._player.energy} | Shield: ${this._player.shield}`);
+                this._spaceShip.enableHurtMode(true);
             }
         } else {
             if (!this._enemies) return;
@@ -120,8 +119,6 @@ export class Game {
         if (enemy.testCollision(this._spaceShip.collisionAreas)) {
             this._player.damage(enemy.touchDamage);
             this._spaceShip.enableHurtMode(true);
-            // TODO: render spaceship as blinking and more transparent to show invincible state (also stop it afterwards)
-            console.log(`Energy: ${this._player.energy} | Shield: ${this._player.shield}`);
         }
     }
 

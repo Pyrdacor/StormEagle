@@ -3,6 +3,7 @@ import { defaultFireDelay, Projectiles, projectileSettings, ProjectileSource, Pr
 import { ISprite, Sprite } from "./render/sprite";
 import { Rect } from "./render/rect";
 import { AlphaBlinkAction, RenderActionState } from "./render/render-action";
+import { invincibleTime } from "./player";
 
 // Of the image, not of the sized spaceship!
 const collisionAreas: Rect[] = [
@@ -38,6 +39,7 @@ export class SpaceShip implements ISprite {
     }
 
     public updateNode(p: p5): void {
+        this._hurtModeActionState.update();
         this._sprite.updateNode(p);
     }
 
@@ -109,6 +111,6 @@ export class SpaceShip implements ISprite {
     }
 
     public enableHurtMode(enable: boolean): void {
-        this._hurtModeActionState.enableAction(enable);
+        this._hurtModeActionState.enableAction(enable, invincibleTime);
     }
 }

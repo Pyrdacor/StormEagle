@@ -62,7 +62,7 @@ export class Projectile extends MovingSprite {
         super(image, position, size, directionX, directionY);
     }
 
-    override draw(p: p5): void {
+    protected override draw(p: p5): void {
         // Note: Projectile graphis always point right and/or down.
         this.flipHorizontally = this.directionX === DirectionX.Left;
         this.flipVertically = this.directionY === DirectionY.Up;
@@ -128,6 +128,8 @@ export class Projectiles {
 
             if (!isOnScreen(p, projectile.area)) {
                 projectilesToRemove.add(index);
+            } else {
+                projectile.updateNode(p);
             }
         });
 
@@ -137,6 +139,6 @@ export class Projectiles {
     }
 
     public draw(p: p5): void {
-        this._projectiles.forEach(projectile => projectile.draw(p));
+        this._projectiles.forEach(projectile => projectile.drawNode(p));
     }
 }

@@ -2,6 +2,7 @@ import p5, { Image } from "p5";
 import { defaultFireDelay, Projectiles, projectileSettings, ProjectileSource, ProjectileType } from "./projectiles";
 import { ISprite, Sprite } from "./render/sprite";
 import { Rect } from "./render/rect";
+import { AlphaBlinkAction, RenderActionState } from "./render/render-action";
 
 // Of the image, not of the sized spaceship!
 const collisionAreas: Rect[] = [
@@ -16,22 +17,28 @@ const collisionAreas: Rect[] = [
         width: 816,
         height: 501
     },
-]
+];
 
 export class SpaceShip implements ISprite {
     private readonly _sprite: Sprite;
     private _collisionAreas: Rect[] = [];
     private _projectileType: ProjectileType = ProjectileType.Plasma;
     private _lastShootTime = 0;
+    private _hurtModeActionState: RenderActionState<AlphaBlinkAction>;
 
     constructor(image: Image, private readonly _projectiles: Projectiles) {
         this._sprite = new Sprite(image, 256);
+        this._hurtModeActionState = new RenderActionState(this._sprite, () => new AlphaBlinkAction(255, 128, 100));
 
         this.updateCollisionAreas();
     }
 
-    public draw(p: p5): void {
-        this._sprite.draw(p);
+    public drawNode(p: p5): void {
+        this._sprite.drawNode(p);
+    }
+
+    public updateNode(p: p5): void {
+        this._sprite.updateNode(p);
     }
 
     public moveBy(x: number, y: number): void {
@@ -99,5 +106,9 @@ export class SpaceShip implements ISprite {
             width: ca.width * scaling.width,
             height: ca.height * scaling.height
         }));
+    }
+
+    public enableHurtMode(enable: boolean): void {
+        this._hurtModeActionState.enableAction(enable);
     }
 }

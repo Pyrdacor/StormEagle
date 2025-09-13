@@ -1,7 +1,7 @@
 import p5, { Image } from "p5";
-import { StarField } from "./render/starField";
+import { StarField } from "./render/star-field";
 import { ImageLoader } from "./misc";
-import { AsteroidField } from "./render/asteroidField";
+import { AsteroidField } from "./render/asteroid-field";
 import { Direction } from "./render/direction";
 import { P5 } from './constants';
 import { SpaceShip } from "./space-ship";
@@ -30,7 +30,8 @@ export class Game {
         this._enemies = new Enemies(new Map([
             [EnemyType.Spaceship, await imageLoader('./assets/enemy_spaceship.png')]
         ]), this._projectiles, this._explosions);
-        this._spaceShip = new SpaceShip(await imageLoader('./assets/spaceship.png'), this._projectiles);
+        const spaceshipImage = await imageLoader('./assets/spaceship.png');
+        this._spaceShip = new SpaceShip(spaceshipImage, this._projectiles);
         this._asteroidImage = await imageLoader('./assets/asteroid.png');
     }
 
@@ -82,6 +83,8 @@ export class Game {
             if (p.keyIsDown('Space') && projectileSettings[this._spaceShip.projectileType].allowPermaFire) {
                 this._spaceShip.shoot();
             }
+
+            this._spaceShip.updateNode(p);
         }
 
         this._starFields.forEach((starField, index) => starField.update(0.3 * (index + 1)));
@@ -116,6 +119,7 @@ export class Game {
 
         if (enemy.testCollision(this._spaceShip.collisionAreas)) {
             this._player.damage(enemy.touchDamage);
+            this._spaceShip.enableHurtMode(true);
             // TODO: render spaceship as blinking and more transparent to show invincible state (also stop it afterwards)
             console.log(`Energy: ${this._player.energy} | Shield: ${this._player.shield}`);
         }
@@ -136,7 +140,7 @@ export class Game {
         }
 
         if (this._spaceShip) {
-            this._spaceShip.draw(p);
+            this._spaceShip.drawNode(p);
         }
 
         if (this._projectiles) {

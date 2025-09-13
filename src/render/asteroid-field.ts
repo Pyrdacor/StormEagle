@@ -51,10 +51,10 @@ export class AsteroidField {
     }
 
     private drawAsteroid(p: p5, asteroid: Asteroid): void {
-        //p5.tint(asteroid.tint.r, asteroid.tint.g, asteroid.tint.b, 255);
+        //p.tint(asteroid.tint.r, asteroid.tint.g, asteroid.tint.b, 255);
         imageRotated(p, this._asteroidImage, asteroid.position.x, asteroid.position.y,
             asteroid.rotation, asteroid.width, asteroid.height);
-        //p5.tint(255, 255);
+        //p.tint(255, 255);
     }
 
     private spawnAsteroids(count: number, baseAsteroidSize: number): void {

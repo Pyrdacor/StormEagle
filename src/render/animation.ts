@@ -70,9 +70,11 @@ export class Animation extends Sprite {
 
             this._frameStartTime = now - elapsed;
         }
+
+        super.update(p);
     }
 
-    public override draw(p: p5): void {
+    protected override draw(p: p5): void {
         if (this._finished) return;
 
         const column = this._currentFrame % this._framesPerRow;

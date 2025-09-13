@@ -1,5 +1,5 @@
 import { Position } from "./position";
-import { IRenderNode, RenderNode } from "./renderNode";
+import { IRenderNode, RenderNode } from "./render-node";
 import p5, { Image } from "p5";
 import { Size } from "./size";
 import { Movement } from "../movement";
@@ -34,7 +34,7 @@ export class Sprite extends RenderNode {
         }
     }
 
-    public override draw(p: p5): void {
+    protected override draw(p: p5): void {
         if (this.flipHorizontally || this.flipVertically) {
             p.push();
             const scaleX = this.flipHorizontally ? -1 : 1;

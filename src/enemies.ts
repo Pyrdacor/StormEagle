@@ -109,7 +109,7 @@ export class Enemy extends MovingSprite {
         }
     }
 
-    public update(p: p5): void {
+    public updateEnemy(p: p5): void {
         const ai = enemySettings[this._type].ai ?? defaultAI;
 
         ai.update(p, this);
@@ -297,17 +297,19 @@ export class Enemies {
             if (enemy.energy <= 0) {
                 // Died
                 const area = enemy.area;
-                this._explosions.spawn({ x: area.x + area.width / 2, y: area.y + area.height / 2 }, 0.25);
+                this._explosions.spawn({ x: area.x + area.width / 2, y: area.y + area.height / 2 }, 0.5);
                 enemiesToRemove.add(index);
                 return;
             }
 
-            enemy.update(p);
+            enemy.updateEnemy(p);
 
             testCollision(enemy);
 
             if (!isOnScreen(p, enemy.area)) {
                 enemiesToRemove.add(index);
+            } else {
+                enemy.updateNode(p);
             }
         });
 
@@ -317,6 +319,6 @@ export class Enemies {
     }
 
     public draw(p: p5): void {
-        this._enemies.forEach(projectile => projectile.draw(p));
+        this._enemies.forEach(enemy => enemy.drawNode(p));
     }
 }

@@ -1,4 +1,4 @@
-import p5, { Image } from "p5";
+import p5, { Image, Graphics } from "p5";
 import { intersectsWithRect, Rect } from "./rect";
 
 export function imageRotated(p: p5, img: Image, x: number, y: number, rotation: number, width?: number, height?: number) {

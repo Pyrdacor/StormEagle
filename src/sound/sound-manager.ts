@@ -2,11 +2,13 @@ import { SoundLoader } from "../loaders";
 import { Sound } from "./sound";
 
 export enum SoundType {
-  Explosion
+  Explosion,
+  Die
 }
 
 const soundFiles = [
-  'explosion.wav'
+  'explosion.wav',
+  'die.wav'
 ]
 
 export class SoundManager {

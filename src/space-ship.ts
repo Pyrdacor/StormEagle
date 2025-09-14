@@ -26,6 +26,7 @@ export class SpaceShip implements ISprite {
     private _projectileType: ProjectileType = ProjectileType.Plasma;
     private _lastShootTime = 0;
     private _hurtModeActionState: RenderActionState<AlphaBlinkAction>;
+    public visible = true;
 
     constructor(image: Image, private readonly _projectiles: Projectiles) {
         this._sprite = new Sprite(image, 256);
@@ -35,7 +36,9 @@ export class SpaceShip implements ISprite {
     }
 
     public drawNode(p: p5): void {
-        this._sprite.drawNode(p);
+        if (this.visible) {
+            this._sprite.drawNode(p);
+        }
     }
 
     public updateNode(p: p5): void {

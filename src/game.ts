@@ -104,14 +104,28 @@ export class Game {
         this._explosions.update(p);
     }
 
+    private gameOver(): void {
+        this._enemies.clear();
+        this._projectiles.clear();
+
+        const shipArea = this._spaceShip.area;
+        this._explosions.spawn({ x: shipArea.x + shipArea.width / 2, y: shipArea.y + shipArea.height / 2 }, 0.8);
+        this._spaceShip.visible = false;
+        this.playSound(SoundType.Die);
+    }
+
     private testProjectileCollision(projectile: Projectile): void {
         if (projectile.source === ProjectileSource.Enemy) {
             if (!this._spaceShip) return;
-            if (this._player.invincible) return;
+            if (this._player.invincible || !this._spaceShip.visible) return;
 
             if (this._spaceShip.collisionAreas.some(area => intersectsWithRect(projectile.area, area))) {
                 this._player.damage((projectile.sourceObject as Enemy).getProjectileDamage(projectile.type));
-                this._spaceShip.enableHurtMode(true);
+                if (this._player.energy > 0) {
+                    this._spaceShip.enableHurtMode(true);
+                } else {
+                    this.gameOver();
+                }
             }
         } else {
             if (!this._enemies) return;
@@ -123,11 +137,15 @@ export class Game {
 
     private testEnemyCollision(enemy: Enemy): void {
         if (!this._spaceShip) return;
-        if (this._player.invincible) return;
+        if (this._player.invincible || !this._spaceShip.visible) return;
 
         if (enemy.testCollision(this._spaceShip.collisionAreas)) {
             this._player.damage(enemy.touchDamage);
-            this._spaceShip.enableHurtMode(true);
+            if (this._player.energy > 0) {
+                this._spaceShip.enableHurtMode(true);
+            } else {
+                this.gameOver();
+            }
         }
     }
 
@@ -160,5 +178,43 @@ export class Game {
         if (this._projectiles) {
             this._projectiles.draw(p);
         }
+
+        // hud
+        p.noFill();
+        p.stroke(255);
+        p.strokeWeight(2);
+        const r = 0.01 * p.width;
+        const barWidth = 0.1 * p.width;
+        const barHeight = 0.04 * p.height;
+        p.rect(0, 0, barWidth + 4, barHeight + 4, r, r, r, r);
+        p.rect(barWidth + 4, 0, barWidth + 4, barHeight + 4, r, r, r, r);
+
+        const partWidth = 0.1 * barWidth;
+        p.noStroke();
+        p.fill(64, 192, 255, 224);
+
+        for (let i = 0; i < 10; i++) {
+            if (this._player.energy >= i * 10 + 1) {
+                const lr = i === 0 ? r : 0;
+                const rr = i === 9 ? r : 0;
+                p.rect(2 + i * partWidth, 2, partWidth - 2, barHeight, lr, rr, rr, lr);
+            }
+        }
+
+        let textWidth = p.textWidth('Energy');
+        p.text('Energy', (barWidth + 2) / 2 - textWidth / 2, barHeight + 8, Number.MAX_SAFE_INTEGER, Number.MAX_SAFE_INTEGER);
+
+        p.fill(240, 240, 192, 224);
+
+        for (let i = 0; i < 10; i++) {
+            if (this._player.shield >= i * 10 + 1) {
+                const lr = i === 0 ? r : 0;
+                const rr = i === 9 ? r : 0;
+                p.rect(barWidth + 6 + i * partWidth, 2, partWidth - 2, barHeight, lr, rr, rr, lr);
+            }
+        }
+
+        textWidth = p.textWidth('Shield');
+        p.text('Shield', barWidth + 4 + (barWidth + 2) / 2 - textWidth / 2, barHeight + 8, Number.MAX_SAFE_INTEGER, Number.MAX_SAFE_INTEGER);
     }
 }

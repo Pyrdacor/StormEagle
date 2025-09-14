@@ -116,6 +116,10 @@ export class Projectiles {
         return projectile;
     }
 
+    public clear(): void {
+        this._projectiles = [];
+    }
+
     public update(p: p5, testCollision: ProjectileCollisionTest): void {
         const projectilesToRemove = new Set<number>();
 

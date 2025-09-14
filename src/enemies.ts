@@ -278,6 +278,10 @@ export class Enemies {
         return this._enemies.filter(filter);
     }
 
+    public clear(): void {
+        this._enemies = [];
+    }
+
     public spawn(type: EnemyType, position: Position): Enemy {
         const image = this._images.get(type);
         const width = enemySettings[type].width;

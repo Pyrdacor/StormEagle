@@ -1,6 +1,6 @@
 import p5, { Image } from "p5";
 import { StarField } from "./render/star-field";
-import { ImageLoader } from "./misc";
+import { ImageLoader, SoundLoader } from "./loaders";
 import { AsteroidField } from "./render/asteroid-field";
 import { Direction } from "./render/direction";
 import { P5 } from './constants';
@@ -10,6 +10,8 @@ import { Enemies, Enemy, EnemyType } from "./enemies";
 import { Player } from "./player";
 import { intersectsWithRect } from "./render/rect";
 import { Explosions } from "./explosions";
+import { SoundManager, SoundType } from "./sound/sound-manager";
+import { Sound } from "./sound/sound";
 
 export class Game {
     private readonly _player = new Player();
@@ -21,8 +23,13 @@ export class Game {
     private _asteroidImage: Image | undefined = undefined;
     private _starFields: StarField[] = [];
     private _asteroidFields: AsteroidField[] = [];
+    private _soundManager: SoundManager | undefined = undefined;
 
-    public async load(imageLoader: ImageLoader): Promise<void> {
+    constructor(private readonly _audioContext: AudioContext) {
+
+    }
+
+    public async load(imageLoader: ImageLoader, soundLoader: SoundLoader): Promise<void> {
         this._projectiles = new Projectiles(new Map([
             [ProjectileType.Plasma, await imageLoader('./assets/plasma_projectile.png')]
         ]));
@@ -33,6 +40,8 @@ export class Game {
         const spaceshipImage = await imageLoader('./assets/spaceship.png');
         this._spaceShip = new SpaceShip(spaceshipImage, this._projectiles);
         this._asteroidImage = await imageLoader('./assets/asteroid.png');
+
+        this._soundManager = await SoundManager.create(this._audioContext, soundLoader);
     }
 
     public setup(p: p5): void {
@@ -90,7 +99,7 @@ export class Game {
         this._starFields.forEach((starField, index) => starField.update(0.3 * (index + 1)));
         this._asteroidFields.forEach((asteroidField, index) => asteroidField.update(4 * (index + 1)));
 
-        this._enemies.update(p, (enemy) => this.testEnemyCollision(enemy));
+        this._enemies.update(p, this, (enemy) => this.testEnemyCollision(enemy));
         this._projectiles.update(p, (projectile) => this.testProjectileCollision(projectile));
         this._explosions.update(p);
     }
@@ -122,8 +131,16 @@ export class Game {
         }
     }
 
+    public playSound(soundType: SoundType): Sound {
+        const sound = this._soundManager.getSound(soundType);
+
+        sound.play();
+
+        return sound;
+    }
+
     public render(p: p5): void {
-        p.background(0);
+        p.background(0, 255);
 
         this._starFields.forEach(starField => starField.draw(p));
         this._asteroidFields.forEach(asteroidField => asteroidField.draw(p));

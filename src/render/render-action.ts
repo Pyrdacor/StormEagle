@@ -54,7 +54,6 @@ export class AlphaBlinkAction implements RenderAction {
     }
 
     public push(p: p5): void {
-        console.log('tint to alpha ' + this._alpha);
         p.tint(255, this._alpha);
     }
 

@@ -1,8 +1,9 @@
 import p5, { Image } from "p5";
 import { Game } from "./game";
+import { P5 } from "./constants";
 
-
-const game = new Game();
+const audioContext = new AudioContext();
+const game = new Game(audioContext);
 
 function getCanvasSize(): { width: number; height: number } {
     let width = window.innerWidth;
@@ -31,20 +32,26 @@ export function windowResized(p: p5): void {
 export async function setup(p: p5): Promise<void> {
     const { width, height } = getCanvasSize();
 
-    const canvas = p.createCanvas(width, height, p5.P2D, undefined);
+    const canvas = p.createCanvas(width, height, P5.P2D, undefined);
     canvas.parent("app");
 
     p.frameRate(60);
     p.angleMode('degrees');
 
     // Configuring the canvas
-    p.background("black");
+    p.background("black", 255);
 
     const loadImage = async (path: string): Promise<Image> => {
         return await p.loadImage(path, undefined, (err: unknown) => console.error(`Failed to load image '${path}': ${err}`));
     }
 
-    await game.load(loadImage);
+    const loadSound = async (path: string): Promise<AudioBuffer> => {
+        const response = await fetch(path);
+        const arrayBuffer = await response.arrayBuffer();
+        return await audioContext.decodeAudioData(arrayBuffer, undefined, (err: unknown) => console.error(`Failed to load sound '${path}': ${err}`));
+    }
+
+    await game.load(loadImage, loadSound);
 
     game.setup(p);
 }

@@ -9,6 +9,8 @@ import { AI } from "./ai/ai";
 import { defaultAI } from "./ai/schemes/default.ai";
 import { intersectsWithRect, Rect } from "./render/rect";
 import { Explosions } from "./explosions";
+import { Game } from "./game";
+import { SoundType } from "./sound/sound-manager";
 
 export enum EnemyType {
     Spaceship
@@ -290,7 +292,7 @@ export class Enemies {
         return enemy;
     }
 
-    public update(p: p5, testCollision: EnemyCollisionTest): void {
+    public update(p: p5, game: Game, testCollision: EnemyCollisionTest): void {
         const enemiesToRemove = new Set<number>();
 
         this._enemies.forEach((enemy, index) => {
@@ -298,6 +300,7 @@ export class Enemies {
                 // Died
                 const area = enemy.area;
                 this._explosions.spawn({ x: area.x + area.width / 2, y: area.y + area.height / 2 }, 0.5);
+                game.playSound(SoundType.Explosion);
                 enemiesToRemove.add(index);
                 return;
             }

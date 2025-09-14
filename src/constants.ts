@@ -9,6 +9,8 @@ export class P5 {
   static OKLAB: 'oklab' = 'oklab';
   static OKLCH: 'oklch' = 'oklch';
   static RGBA: 'rgba' = 'rgba';
+  static P2D: 'p2d' = 'p2d';
+  static P2DHDR: 'p2d-hdr' = 'p2d-hdr';
   static ARROW: 'default' = 'default';
   static CROSS: 'crosshair' = 'crosshair';
   static HAND: 'pointer' = 'pointer';

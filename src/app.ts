@@ -3,7 +3,6 @@ import "./styles.scss";
 
 import { draw, keyPressed, keyReleased, setup, windowResized } from "./lifecycle";
 
-// Creating the sketch itself
 const sketch = (p: p5) => {
     p.setup = () => setup(p);
     p.windowResized = () => windowResized(p);

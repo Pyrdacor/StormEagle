@@ -8,7 +8,7 @@ import { SpaceShip } from "./space-ship";
 import { projectileSettings, Projectile, Projectiles, ProjectileType, ProjectileSource } from "./projectiles";
 import { Enemies, Enemy, EnemyType } from "./enemies";
 import { criticalEnergy, Player } from "./player";
-import { intersectsWithRect } from "./render/rect";
+import { containsPosition, intersectsWithRect } from "./render/rect";
 import { Explosions } from "./explosions";
 import { SoundManager, SoundType } from "./sound/sound-manager";
 import { Sound } from "./sound/sound";
@@ -40,8 +40,10 @@ export class Game {
             [ProjectileType.Plasma, await imageLoader('./assets/plasma_projectile.png')]
         ]));
         this._explosions = new Explosions(await imageLoader('./assets/explosion.png'));
+        const enemySpaceshipImage = await imageLoader('./assets/enemy_spaceship.png');
         this._enemies = new Enemies(new Map([
-            [EnemyType.Spaceship, await imageLoader('./assets/enemy_spaceship.png')]
+            [EnemyType.Spaceship, enemySpaceshipImage],
+            [EnemyType.LargeSpaceship, enemySpaceshipImage],
         ]), this._projectiles, this._explosions);
         const spaceshipImage = await imageLoader('./assets/spaceship.png');
         this._spaceShip = new SpaceShip(spaceshipImage, this._player, this._projectiles);
@@ -92,8 +94,9 @@ export class Game {
                 this._spaceShip.shoot();
             }
         } else if (event.key === 'e' && this._enemies) { // TODO: REMOVE LATER
-            const enemySize = this._enemies.getEnemySize(EnemyType.Spaceship);
-            this._enemies.spawn(EnemyType.Spaceship, {
+            const enemyType = Math.random() < 0.75 ? EnemyType.Spaceship : EnemyType.LargeSpaceship;
+            const enemySize = this._enemies.getEnemySize(enemyType);
+            this._enemies.spawn(enemyType, {
                 x: p.width,
                 y: Math.random() * p.height - enemySize.height
             });
@@ -166,13 +169,19 @@ export class Game {
     }
 
     private testProjectileCollision(projectile: Projectile): boolean {
+        const projectileCenter = {
+            x: projectile.x + projectile.width / 2,
+            y: projectile.y + projectile.height / 2
+        };
+
         if (projectile.source === ProjectileSource.Enemy) {
             if (!this._spaceShip) return false;
             if (this._player.invincible || !this._spaceShip.visible) return false;
 
-            if (this._spaceShip.collisionAreas.some(area => intersectsWithRect(projectile.area, area))) {
+            if (this._spaceShip.collisionAreas.some(area => containsPosition(area, projectileCenter))) {
                 this._player.damage((projectile.sourceObject as Enemy).getProjectileDamage(projectile.type));
                 if (this._player.energy > 0) {
+                    this.playSound(SoundType.Collision);
                     this._spaceShip.enableHurtMode(true);
                     return true;
                 } else {
@@ -185,8 +194,14 @@ export class Game {
         } else {
             if (!this._enemies) return false;
 
+            const projectileCollisionArea = {
+                x: projectileCenter.x - 8,
+                y: projectileCenter.y - 8,
+                width: 16,
+                height: 16
+            };
             const playerDamage = projectileSettings[projectile.type].damage * this._player.damageMultiplicator;
-            const hitEnemies = this._enemies.getEnemies(enemy => enemy.testCollision([projectile.area]));
+            const hitEnemies = this._enemies.getEnemies(enemy => enemy.testCollision([projectileCollisionArea]));
 
             if (hitEnemies.length === 0) return false;
 
@@ -199,6 +214,10 @@ export class Game {
             }
 
             hitEnemy.damage(playerDamage);
+
+            if (hitEnemy.energy > 0) {
+                this.playSound(SoundType.Collision);
+            }
 
             return true;
         }
@@ -221,6 +240,7 @@ export class Game {
         if (this._player.invincible || !this._spaceShip.visible) return;
 
         if (enemy.testCollision(this._spaceShip.collisionAreas)) {
+            this.playSound(SoundType.Collision);
             this._player.damage(enemy.touchDamage);
             if (this._player.energy > 0) {
                 this._spaceShip.enableHurtMode(true);

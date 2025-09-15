@@ -13,7 +13,8 @@ import { Game } from "./game";
 import { SoundType } from "./sound/sound-manager";
 
 export enum EnemyType {
-    Spaceship
+    Spaceship,
+    LargeSpaceship,
 }
 
 export type EnemyCollisionTest = (enemy: Enemy) => void;
@@ -57,6 +58,34 @@ export const enemySettings: EnemySettings[] = [
         touchDamage: 5,
         projectileDamageMultiplicator: 1.0,
         additionalFireDelay: 1500,
+        movement: movementSineLeft(50, 300),
+        collisionAreas: [{
+            x: 0,
+            y: 200,
+            width: 748,
+            height: 552
+        }, {
+            x: 748,
+            y: 0,
+            width: 686,
+            height: 752
+        }]
+    },
+    // Large enemy spaceship
+    {
+        primaryProjectile: ProjectileType.Plasma,
+        primaryProjectileOriginProvider: (projectileInfo, settings, height) => ({
+            x: -projectileInfo.width * (settings.projectileScale ?? 1) + 20,
+            y: height / 2 + 37
+        }),
+        projectileScale: 1.0,
+        width: 256,
+        speed: 1.2,
+        energy: 20,
+        shield: 0,
+        touchDamage: 10,
+        projectileDamageMultiplicator: 2.0,
+        additionalFireDelay: 2000,
         movement: movementSineLeft(50, 300),
         collisionAreas: [{
             x: 0,

@@ -5,13 +5,15 @@ import { Sound } from "./sound";
 export enum SoundType {
   Explosion,
   Die,
-  Powerup
+  Powerup,
+  Collision
 }
 
 const soundFiles = [
   'explosion.wav',
   'die.wav',
-  'powerup.wav'
+  'powerup.wav',
+  'collision.wav'
 ];
 
 const musicFiles = [

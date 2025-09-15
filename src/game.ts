@@ -12,6 +12,7 @@ import { intersectsWithRect } from "./render/rect";
 import { Explosions } from "./explosions";
 import { SoundManager, SoundType } from "./sound/sound-manager";
 import { Sound } from "./sound/sound";
+import { Music } from "./sound/music";
 
 export class Game {
     private readonly _player = new Player();
@@ -48,6 +49,8 @@ export class Game {
         this._starFields.push(new StarField(p.width, p.height, 100, 2));
         this._starFields.push(new StarField(p.width, p.height, 30, 3));
         this._asteroidFields.push(new AsteroidField(p.width, p.height, 8, 200, this._asteroidImage));
+
+        this.playMusic(0);
     }
 
     private isDirectionKeyDown(p: p5, direction: Direction): boolean {
@@ -64,16 +67,26 @@ export class Game {
     }
 
     public keyPressed(p: p5, event: KeyboardEvent): void {
-        if (event.code === 'Space') {
+        if (event.key === ' ') {
             if (projectileSettings[this._spaceShip.projectileType].allowPermaFire || !event.repeat) {
                 this._spaceShip.shoot();
             }
-        } else if (event.code === 'KeyE' && this._enemies) { // TODO: REMOVE LATER
+        } else if (event.key === 'e' && this._enemies) { // TODO: REMOVE LATER
             const enemySize = this._enemies.getEnemySize(EnemyType.Spaceship);
             this._enemies.spawn(EnemyType.Spaceship, {
                 x: p.width,
                 y: Math.random() * p.height - enemySize.height
             });
+        } else if (event.key === '+') {
+            this._soundManager.volume += 0.1;
+        } else if (event.key === '-') {
+            this._soundManager.volume -= 0.1;
+        } else if (event.key === 'm') {
+            if (this._soundManager.volume > 0) {
+                this._soundManager.volume = 0;
+            } else {
+                this._soundManager.volume = 1;
+            }
         }
     }
 
@@ -155,6 +168,14 @@ export class Game {
         sound.play();
 
         return sound;
+    }
+
+    public playMusic(level: number): Music {
+        const music = this._soundManager.getMusic(level);
+
+        music.play();
+
+        return music;
     }
 
     public render(p: p5): void {

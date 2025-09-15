@@ -16,8 +16,11 @@ import { Music } from "./sound/music";
 import { drawText, fill } from "./render/utils";
 import { Color } from "./render/color";
 import { Powerup, Powerups, PowerupType } from "./powerups";
+import { Position } from "./render/position";
+import { LevelManager } from "./level";
 
 export class Game {
+    private readonly _levelManager = new LevelManager();
     private readonly _player = new Player();
     private _started = false;
     private _speed: number = 5;
@@ -30,6 +33,7 @@ export class Game {
     private _starFields: StarField[] = [];
     private _asteroidFields: AsteroidField[] = [];
     private _soundManager: SoundManager | undefined = undefined;
+    private _pauseBackgroundMovement = false;
 
     constructor(private readonly _audioContext: AudioContext) {
 
@@ -130,6 +134,10 @@ export class Game {
     }
 
     public update(p: p5): void {
+        if (this._spaceShip && this._powerups && this._enemies) {
+            this._levelManager.update(p, this);
+        }
+
         if (this._spaceShip) {
             if (this.isDirectionKeyDown(p, Direction.Up) && !this.isDirectionKeyDown(p, Direction.Down) && this._spaceShip.y > 0) {
                 this._spaceShip.moveBy(0, -this._speed);
@@ -148,10 +156,12 @@ export class Game {
             this._spaceShip.updateNode(p);
         }
 
-        this._starFields.forEach((starField, index) => starField.update(0.3 * (index + 1)));
-        this._asteroidFields.forEach((asteroidField, index) => asteroidField.update(4 * (index + 1)));
+        if (!this._pauseBackgroundMovement) {
+            this._starFields.forEach((starField, index) => starField.update(0.3 * (index + 1)));
+            this._asteroidFields.forEach((asteroidField, index) => asteroidField.update(4 * (index + 1)));
+            this._enemies.update(p, this, (enemy) => this.testEnemyCollision(enemy));
+        }
 
-        this._enemies.update(p, this, (enemy) => this.testEnemyCollision(enemy));
         this._projectiles.update(p, (projectile) => this.testProjectileCollision(projectile));
         this._explosions.update(p);
         this._powerups.update(p, (powerup) => this.testPowerupCollision(powerup));
@@ -365,5 +375,17 @@ export class Game {
         }
 
         drawText(p, { x: barWidth + 4 + (barWidth + 2) / 2, y: barHeight + 16 }, 'Shield', color);
+    }
+
+    public spawnEnemy(enemyType: EnemyType, position: Position): void {
+        this._enemies.spawn(enemyType, position);
+    }
+
+    public spawnPowerup(powerupType: PowerupType, position: Position): void {
+        this._powerups.spawn(powerupType, position);
+    }
+
+    public enableBackgroundMovement(enable: boolean): void {
+        this._pauseBackgroundMovement = !enable;
     }
 }

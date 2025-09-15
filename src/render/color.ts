@@ -18,4 +18,12 @@ export class Color {
     public get a() {
         return this._a;
     }
+
+    public equals(color: Color, includeAlpha = true): boolean {
+        if (includeAlpha && color.a !== this.a) return false;
+
+        return color.r === this.r &&
+            color.g === this.g &&
+            color.b === this.b;
+    }
 }

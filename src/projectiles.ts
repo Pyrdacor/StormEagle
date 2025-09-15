@@ -32,7 +32,7 @@ export enum ProjectileSource {
     Enemy
 }
 
-export type ProjectileCollisionTest = (projectile: Projectile) => void;
+export type ProjectileCollisionTest = (projectile: Projectile) => boolean;
 
 export const defaultFireDelay = 250; // ms
 const defaultProgression = [movementRight, movementLeft] as [Movement, Movement];
@@ -128,9 +128,7 @@ export class Projectiles {
             const movement = settings.movement[projectile.source];
             projectile.move(movement, settings.speed);
 
-            testCollision(projectile);
-
-            if (!isOnScreen(p, projectile.area)) {
+            if (testCollision(projectile) || !isOnScreen(p, projectile.area)) {
                 projectilesToRemove.add(index);
             } else {
                 projectile.updateNode(p);

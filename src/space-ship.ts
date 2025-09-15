@@ -2,8 +2,9 @@ import p5, { Image } from "p5";
 import { defaultFireDelay, Projectiles, projectileSettings, ProjectileSource, ProjectileType } from "./projectiles";
 import { ISprite, Sprite } from "./render/sprite";
 import { Rect } from "./render/rect";
-import { AlphaBlinkAction, RenderActionState } from "./render/render-action";
-import { invincibleTime } from "./player";
+import { AlphaBlinkAction, RenderActionState, TintBlinkAction } from "./render/render-action";
+import { criticalEnergy, invincibleTime, Player } from "./player";
+import { Color } from "./render/color";
 
 // Of the image, not of the sized spaceship!
 const collisionAreas: Rect[] = [
@@ -26,11 +27,18 @@ export class SpaceShip implements ISprite {
     private _projectileType: ProjectileType = ProjectileType.Plasma;
     private _lastShootTime = 0;
     private _hurtModeActionState: RenderActionState<AlphaBlinkAction>;
+    private _criticalEnergyModeActionState: RenderActionState<TintBlinkAction>;
     public visible = true;
 
-    constructor(image: Image, private readonly _projectiles: Projectiles) {
+    constructor(image: Image, player: Player, private readonly _projectiles: Projectiles) {
         this._sprite = new Sprite(image, 256);
         this._hurtModeActionState = new RenderActionState(this._sprite, () => new AlphaBlinkAction(255, 128, 100));
+        this._criticalEnergyModeActionState = new RenderActionState(this._sprite, () => new TintBlinkAction(
+            new Color(255, 255, 255),
+            new Color(255, 64, 80),
+            200
+        ));
+        this._hurtModeActionState.chainAction(this._criticalEnergyModeActionState, undefined, () => player.energy < criticalEnergy);
 
         this.updateCollisionAreas();
     }
@@ -114,6 +122,13 @@ export class SpaceShip implements ISprite {
     }
 
     public enableHurtMode(enable: boolean): void {
+        this._criticalEnergyModeActionState.enableAction(false);
         this._hurtModeActionState.enableAction(enable, invincibleTime);
+    }
+
+    public enableCriticalEnergyMode(enable: boolean): void {
+        if (this._hurtModeActionState.enabled) return;
+
+        this._criticalEnergyModeActionState.enableAction(enable);
     }
 }

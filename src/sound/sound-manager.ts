@@ -4,12 +4,14 @@ import { Sound } from "./sound";
 
 export enum SoundType {
   Explosion,
-  Die
+  Die,
+  Powerup
 }
 
 const soundFiles = [
   'explosion.wav',
-  'die.wav'
+  'die.wav',
+  'powerup.wav'
 ];
 
 const musicFiles = [
@@ -36,6 +38,26 @@ export class SoundManager {
     this._gainNode.gain.value = this._volume;
   }
 
+  public fadeToVolumne(volume: number, time: number): void {
+    const now = this._gainNode.context.currentTime;
+    volume = Math.max(0, Math.min(1, volume));
+    this._gainNode.gain.setValueAtTime(this._gainNode.gain.value, now);
+    this._gainNode.gain.linearRampToValueAtTime(volume, now + 0.001 * time);
+    setTimeout(() => this.volume = volume, time);
+  }
+
+  public get isSuspended(): boolean {
+    return this._gainNode.context.state === 'suspended';
+  }
+
+  public async init(): Promise<void> {
+    if (this._gainNode.context.state === 'suspended') {
+      await (this._gainNode.context as AudioContext).resume();
+    }
+
+    this.fadeToVolumne(0.5, 5000.0);
+  }
+
   public getSound(type: SoundType): Sound | undefined {
     return this._sounds.get(type);
   }
@@ -47,7 +69,7 @@ export class SoundManager {
   public static async create(audioContext: AudioContext, soundLoader: SoundLoader): Promise<SoundManager> {
     const gainNode = audioContext.createGain();
     gainNode.connect(audioContext.destination);
-    gainNode.gain.value = 1.0; // 100% volume
+    gainNode.gain.value = 0.0; // start silent
 
     const loadSound = async (file: string): Promise<Sound> => {
       const path = `/assets/${file}`;

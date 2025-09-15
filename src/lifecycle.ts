@@ -52,15 +52,19 @@ export async function setup(p: p5): Promise<void> {
     }
 
     await game.load(loadImage, loadSound);
-
-    game.setup(p);
+    await game.setup(p);
 }
 
 export function keyPressed(p: p5, event: KeyboardEvent): void {
     game.keyPressed(p, event);
 }
 
-export function keyReleased(p: p5): void {
+export function keyReleased(p: p5, event: KeyboardEvent): void {
+    game.keyReleased(p, event);
+}
+
+export function mouseClicked(p: p5, event: MouseEvent): void {
+    game.mouseClicked(p, event);
 }
 
 export function draw(p: p5): void {

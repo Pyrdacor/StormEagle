@@ -1,5 +1,9 @@
 import p5, { Image } from "p5";
 import { Sprite } from "./sprite";
+import { Position, ZeroPosition } from "./position";
+import { Size } from "./size";
+import { DirectionX, DirectionY } from "./direction";
+import { Movement } from "../movement";
 
 export class Animation extends Sprite {
     private readonly _framesPerRow: number;
@@ -16,7 +20,8 @@ export class Animation extends Sprite {
         width?: number,
         height?: number,
         frameCount?: number,
-        private _repeatCount?: number // inf for unlimited
+        private _repeatCount?: number, // use inf for infinite animation
+        private readonly _atlasOffset?: Position
     ) {
         super(_atlas, width ?? _frameWidth, height ?? _frameHeight);
 
@@ -79,7 +84,8 @@ export class Animation extends Sprite {
 
         const column = this._currentFrame % this._framesPerRow;
         const row = Math.floor(this._currentFrame / this._framesPerRow);
-        const frame = this._atlas.get(column * this._frameWidth, row * this._frameHeight, this._frameWidth, this._frameHeight);
+        const offset = this._atlasOffset ?? ZeroPosition();
+        const frame = this._atlas.get(offset.x + column * this._frameWidth, offset.y + row * this._frameHeight, this._frameWidth, this._frameHeight);
 
         if (this.flipHorizontally || this.flipVertically) {
             p.push();
@@ -93,5 +99,81 @@ export class Animation extends Sprite {
         } else {
             p.image(frame, this.x, this.y, this.width, this.height);
         }
+    }
+}
+
+
+export class MovingAnimation extends Animation {
+    private _startPosition: Position;
+    private _lastPosition: Position;
+    private _directionX = DirectionX.Right;
+    private _directionY = DirectionY.Down;
+
+    constructor(
+        atlas: Image,
+        frameWidth: number,
+        frameHeight: number,
+        frameTime: number,
+        position: Position,
+        size?: Size,
+        frameCount?: number,
+        repeatCount?: number,
+        atlasOffset?: Position,
+        directionX = DirectionX.Right,
+        directionY = DirectionY.Down
+    ) {
+        super(atlas, frameWidth, frameHeight, frameTime, size?.width, size?.height, frameCount, repeatCount, atlasOffset);
+
+        this.moveTo(position.x, position.y);
+
+        this._startPosition = { x: position.x, y: position.y };
+        this._lastPosition = { x: position.x, y: position.y };
+        this._directionX = directionX;
+        this._directionY = directionY;
+    }
+
+    public override moveBy(x: number, y: number): void {
+        this._lastPosition = { x: this.x, y: this.y };
+        super.moveBy(x, y);
+
+        if (x !== 0) {
+            this._directionX = x < 0 ? DirectionX.Left : DirectionX.Right;
+        }
+        if (y !== 0) {
+            this._directionY = y < 0 ? DirectionY.Up : DirectionY.Down;
+        }
+    }
+
+    public override moveTo(x: number, y: number): void {
+        this._lastPosition = { x: this.x, y: this.y };
+        super.moveTo(x, y);
+
+        const diffX = x - this._lastPosition.x;
+        const diffY = y - this._lastPosition.y;
+
+        if (diffX !== 0) {
+            this._directionX = diffX < 0 ? DirectionX.Left : DirectionX.Right;
+        }
+        if (diffY !== 0) {
+            this._directionY = diffY < 0 ? DirectionY.Up : DirectionY.Down;
+        }
+    }
+
+    public move(movement: Movement, speed: number): void {
+        const newPosition = movement([this._lastPosition, { x: this.x, y: this.y }], this._startPosition, speed);
+
+        this.moveTo(newPosition.x, newPosition.y);
+    }
+
+    public get lastPosition(): Position {
+        return this._lastPosition;
+    }
+
+    public get directionX(): DirectionX {
+        return this._directionX;
+    }
+
+    public get directionY(): DirectionY {
+        return this._directionY;
     }
 }

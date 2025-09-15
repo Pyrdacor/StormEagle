@@ -55,7 +55,7 @@ export const enemySettings: EnemySettings[] = [
         energy: 10,
         shield: 0,
         touchDamage: 5,
-        projectileDamageMultiplicator: 0.25,
+        projectileDamageMultiplicator: 1.0,
         additionalFireDelay: 1500,
         movement: movementSineLeft(50, 300),
         collisionAreas: [{
